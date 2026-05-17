@@ -26,16 +26,41 @@ export const authApi = {
 export const workspaceApi = {
   summary: (token, projectId = "") =>
     request(`/dashboard/summary${projectId ? `?projectId=${projectId}` : ""}`, { token }),
-  tasks: (token, projectId = "") =>
-    request(`/tasks${projectId ? `?projectId=${projectId}` : ""}`, { token }),
+  tasks: (token, params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") query.set(key, value);
+    });
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request(`/tasks${suffix}`, { token });
+  },
+  createTask: (token, payload) =>
+    request("/tasks", { token, method: "POST", body: JSON.stringify(payload) }),
+  updateTask: (token, taskId, payload) =>
+    request(`/tasks/${taskId}`, { token, method: "PATCH", body: JSON.stringify(payload) }),
+  deleteTask: (token, taskId) =>
+    request(`/tasks/${taskId}`, { token, method: "DELETE" }),
+  addTaskComment: (token, taskId, message) =>
+    request(`/tasks/${taskId}/comments`, { token, method: "POST", body: JSON.stringify({ message }) }),
+  reorderTasks: (token, updates) =>
+    request("/tasks/reorder", { token, method: "POST", body: JSON.stringify({ updates }) }),
   team: (token) => request("/team", { token }),
   projects: (token) => request("/projects", { token }),
+  invitations: (token) => request("/projects/invitations", { token }),
   createProject: (token, payload) =>
     request("/projects", { token, method: "POST", body: JSON.stringify(payload) }),
   updateProject: (token, projectId, payload) =>
     request(`/projects/${projectId}`, { token, method: "PATCH", body: JSON.stringify(payload) }),
+  deleteProject: (token, projectId) =>
+    request(`/projects/${projectId}`, { token, method: "DELETE" }),
   inviteProjectMember: (token, projectId, payload) =>
     request(`/projects/${projectId}/invitations`, { token, method: "POST", body: JSON.stringify(payload) }),
+  respondToInvitation: (token, invitationId, decision) =>
+    request(`/projects/invitations/${invitationId}`, {
+      token,
+      method: "PATCH",
+      body: JSON.stringify({ decision }),
+    }),
   updateTaskStatus: (token, taskId, status) =>
     request(`/tasks/${taskId}/status`, { token, method: "PATCH", body: JSON.stringify({ status }) }),
 };

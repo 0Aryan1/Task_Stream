@@ -31,7 +31,10 @@ function App() {
         activeProjectId={workspace.activeProjectId}
         currentTab={tab}
         greeting={workspace.summary.greeting}
+        invitations={workspace.invitations}
+        pendingInvitationsCount={workspace.invitations.length}
         onProjectChange={workspace.setActiveProjectId}
+        onRespondInvitation={workspace.respondToInvitation}
         onSignOut={workspace.signOut}
         onTabChange={setTab}
         onToggleTheme={toggleTheme}
@@ -47,13 +50,27 @@ function App() {
             onCreateProject={workspace.createProject}
             onInviteProject={workspace.inviteProjectMember}
             onSelectProject={workspace.setActiveProjectId}
+            onDeleteProject={workspace.deleteProject}
             onUpdateProject={workspace.updateProject}
             projects={workspace.projects}
             selectedProject={workspace.selectedProject}
             team={workspace.team}
           />
         )}
-        {tab === "tasks" && <TasksPage tasks={workspace.tasks} onUpdateStatus={workspace.updateTaskStatus} />}
+        {tab === "tasks" && (
+          <TasksPage
+            activeProjectId={workspace.activeProjectId}
+            selectedProject={workspace.selectedProject}
+            onAddComment={workspace.addTaskComment}
+            onCreateTask={workspace.createTask}
+            onDeleteTask={workspace.deleteTask}
+            onUpdateStatus={workspace.updateTaskStatus}
+            onUpdateTask={workspace.updateTask}
+            projects={workspace.projects}
+            tasks={workspace.tasks}
+            user={workspace.user}
+          />
+        )}
         {tab === "team" && <TeamPage team={workspace.team} />}
       </AppShell>
     </div>

@@ -33,6 +33,31 @@ export function DashboardPage({ summary }) {
           </div>
         )}
       </div>
+
+      <div className="surface p-5">
+        <p className="text-3xl font-bold">Project Progress</p>
+        {summary.distribution.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState>No project progress yet.</EmptyState>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {summary.distribution.map((project) => (
+              <div key={project.label} className="rounded-lg bg-[var(--control-bg)] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-bold">{project.label}</p>
+                  <p className="text-sm font-semibold">
+                    {project.isCompleted ? "Completed" : `${project.doneTasks}/${project.totalTasks} done`}
+                  </p>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--pill-bg)]">
+                  <div className="h-full bg-emerald-600" style={{ width: `${project.value}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

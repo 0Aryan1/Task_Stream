@@ -12,6 +12,7 @@ export function ProjectsPage({
   onCreateProject,
   onInviteProject,
   onSelectProject,
+  onDeleteProject,
   onUpdateProject,
   projects,
   selectedProject,
@@ -64,6 +65,10 @@ export function ProjectsPage({
       setInviteError("Select a project before sending an invitation.");
       return;
     }
+    if (!selectedProject.isOwner) {
+      setInviteError("Only the project owner can send invitations.");
+      return;
+    }
 
     setInviting(true);
     try {
@@ -78,6 +83,7 @@ export function ProjectsPage({
   };
 
   const updateAssignment = async (project, memberId) => {
+    if (!project.isOwner) return;
     const currentIds = toMemberIds(project.members);
     const memberIds = currentIds.includes(memberId)
       ? currentIds.filter((id) => id !== memberId)
@@ -87,7 +93,16 @@ export function ProjectsPage({
   };
 
   const updateStatus = async (project, status) => {
+    if (!project.isOwner) return;
     await onUpdateProject(project.id, { memberIds: toMemberIds(project.members), status });
+  };
+
+  const removeProject = async (project) => {
+    if (!project.isOwner || !isAdmin) return;
+    if (!window.confirm(`Delete "${project.name}" for all members? This will also delete project tasks and invites.`)) {
+      return;
+    }
+    await onDeleteProject(project.id);
   };
 
   return (
@@ -146,7 +161,11 @@ export function ProjectsPage({
           <div className="mb-5">
             <p className="text-2xl font-bold">Invite Member</p>
             <p className="text-sm text-[var(--muted-text)]">
-              {selectedProject ? `Invite into ${selectedProject.name}` : "Choose a project to invite a member."}
+              {selectedProject
+                ? selectedProject.isOwner
+                  ? `Invite into ${selectedProject.name}`
+                  : "Only the project owner can send invitations."
+                : "Choose a project to invite a member."}
             </p>
           </div>
 
@@ -154,7 +173,7 @@ export function ProjectsPage({
             <form className="space-y-4" onSubmit={handleInvite}>
               <Input label="Name" value={inviteForm.name} onChange={(value) => setInviteForm((state) => ({ ...state, name: value }))} placeholder="Member name" />
               <Input label="Email Address" type="email" value={inviteForm.email} onChange={(value) => setInviteForm((state) => ({ ...state, email: value }))} placeholder="member@company.com" />
-              <button disabled={inviting || !selectedProject} className="primary-button w-full">{inviting ? "Preparing invite..." : "Send Invitation"}</button>
+              <button disabled={inviting || !selectedProject?.isOwner} className="primary-button w-full">{inviting ? "Preparing invite..." : "Send Invitation"}</button>
               {inviteError ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{inviteError}</p> : null}
               {inviteResult ? (
                 <div className="rounded-lg border border-[var(--border)] bg-[var(--control-bg)] p-3 text-sm">
@@ -179,14 +198,22 @@ export function ProjectsPage({
                 <div>
                   <p className="text-2xl font-bold">{project.name}</p>
                   <p className="mt-1 text-sm text-[var(--muted-text)]">{project.description || "No description added."}</p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--muted-text)]">
+                    Owner: {project.owner?.fullName || "Unknown"} • Progress: {project.progress.doneTasks}/{project.progress.totalTasks} ({project.progress.percent}%)
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <button type="button" onClick={() => onSelectProject(project.id)} className="secondary-button whitespace-nowrap">
                     {activeProjectId === project.id ? "Selected" : "Switch"}
                   </button>
+                  {project.isOwner && isAdmin ? (
+                    <button type="button" onClick={() => removeProject(project)} className="secondary-button whitespace-nowrap">
+                      Delete
+                    </button>
+                  ) : null}
                   <select
-                    disabled={!isAdmin}
+                    disabled={!project.isOwner}
                     value={project.status}
                     onChange={(event) => updateStatus(project, event.target.value)}
                     className="field max-w-44 py-2 capitalize"
@@ -201,7 +228,7 @@ export function ProjectsPage({
               <div className="mt-5">
                 <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-text)]">Members</p>
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {memberOptions.map((member) => {
+                  {(project.isOwner ? memberOptions : project.members).map((member) => {
                     const assigned = project.members.some((projectMember) => projectMember.id === member.id);
                     return (
                       <label key={member.id} className="flex cursor-pointer items-center justify-between rounded-lg border border-[var(--border)] p-3">
@@ -213,7 +240,7 @@ export function ProjectsPage({
                           </span>
                         </span>
                         <input
-                          disabled={!isAdmin}
+                          disabled={!project.isOwner}
                           type="checkbox"
                           checked={assigned}
                           onChange={() => updateAssignment(project, member.id)}

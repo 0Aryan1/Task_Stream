@@ -8,7 +8,7 @@ const invitationSchema = new mongoose.Schema(
     teamMember: { type: mongoose.Schema.Types.ObjectId, ref: "TeamMember", required: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     token: { type: String, default: () => crypto.randomBytes(24).toString("hex"), unique: true },
-    status: { type: String, enum: ["pending", "accepted"], default: "pending" },
+    status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending", index: true },
   },
   { timestamps: true }
 );
