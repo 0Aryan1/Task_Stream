@@ -12,9 +12,25 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+
+const corsOriginsRaw = process.env.CORS_ORIGIN || "*";
+const corsOrigins = corsOriginsRaw
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: (origin, callback) => {
+      // allow non-browser/server-to-server requests
+      if (!origin) return callback(null, true);
+
+      // allow all in dev when explicitly configured
+      if (corsOrigins.includes("*")) return callback(null, true);
+
+      if (corsOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );

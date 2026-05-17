@@ -1,4 +1,5 @@
-const API = "http://localhost:3000/api";
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
+const API = `${API_BASE}/api`;
 
 const request = async (path, { token, ...options } = {}) => {
   const headers = {
