@@ -140,6 +140,4 @@ Notes / troubleshooting
   Example: CORS_ORIGIN=http://localhost:5173
 - API base URL used by the frontend is: ${VITE_API_URL}/api
 
-License
--------
-See package.json files for license details.
+
